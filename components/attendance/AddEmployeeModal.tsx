@@ -14,6 +14,10 @@ const statusOptions: AttendanceStatus[] = ["Present", "Absent", "Late", "On Leav
 
 export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
   const [form, setForm] = useState<AddEmployeeData>({
+<<<<<<< HEAD
+=======
+    code: "",
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
     name: "",
     gender: "Male",
     contact: "",
@@ -29,7 +33,11 @@ export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
+<<<<<<< HEAD
     setForm({ name: "", gender: "Male", contact: "", rollNo: "", standard: "", status: "Present", punchIn: "", punchOut: "" });
+=======
+    setForm({ code: "", name: "", gender: "Male", contact: "", rollNo: "", standard: "", status: "Present", punchIn: "", punchOut: "" });
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
     onClose();
   };
 
@@ -63,6 +71,21 @@ export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+<<<<<<< HEAD
+=======
+          {/* Biometric ID / Code */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Biometric ID / Code *</label>
+            <input
+              required
+              value={form.code}
+              onChange={(e) => update({ code: e.target.value })}
+              placeholder="e.g. 1, 2, 101 (must match device employee code)"
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
           {/* Name & Gender */}
           <div className="grid grid-cols-2 gap-4">
             <div>

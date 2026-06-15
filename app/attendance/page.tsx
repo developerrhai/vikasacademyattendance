@@ -1,7 +1,11 @@
 "use client";
 
+<<<<<<< HEAD
 import { useState, useRef } from "react";
 import * as XLSX from "xlsx";
+=======
+import { useState } from "react";
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 import { useAttendance } from "@/hooks/useAttendance";
 import { StatCards } from "@/components/attendance/StatCards";
 import { FilterBar } from "@/components/attendance/FilterBar";
@@ -14,6 +18,10 @@ import type { AttendanceRecord } from "@/types/attendance";
 export default function AttendancePage() {
   const {
     records,
+<<<<<<< HEAD
+=======
+    allRecords,
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
     summary,
     filter,
     updateFilter,
@@ -29,11 +37,17 @@ export default function AttendancePage() {
     addEmployee,
     editRecord,
     deleteRecord,
+<<<<<<< HEAD
+=======
+    importToBiometric,
+    biometricImportCode,
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
   } = useAttendance();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AttendanceRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AttendanceRecord | null>(null);
+<<<<<<< HEAD
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
@@ -74,6 +88,36 @@ export default function AttendancePage() {
       setImporting(false);
       e.target.value("");
     }
+=======
+
+  const handleExport = () => {
+    if (!allRecords || allRecords.length === 0) {
+      alert("No records to export.");
+      return;
+    }
+    const headers = ["Student Code", "Name", "Gender", "Contact", "Standard", "Punch In", "Punch Out", "Device Serial", "Status"];
+    const csvRows = [
+      headers.join(","),
+      ...allRecords.map((r) => [
+        `"${r.student.code}"`,
+        `"${r.student.name.replace(/"/g, '""')}"`,
+        `"${r.student.gender}"`,
+        `"${r.student.contact}"`,
+        `"${(r.student.standard || "").replace(/"/g, '""')}"`,
+        `"${r.punchIn || ""}"`,
+        `"${r.punchOut || ""}"`,
+        `"${r.serialNumber || ""}"`,
+        `"${r.status}"`
+      ].join(","))
+    ];
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join("\n"));
+    const link = document.createElement("a");
+    link.setAttribute("href", csvContent);
+    link.setAttribute("download", `attendance_${filter.date}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
   };
 
   return (
@@ -97,7 +141,10 @@ export default function AttendancePage() {
             </svg>
             {syncing ? "Syncing..." : "Sync Biometric"}
           </button>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
           <button
             onClick={() => setIsAddOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -107,6 +154,7 @@ export default function AttendancePage() {
             </svg>
             Add Employee
           </button>
+<<<<<<< HEAD
 
           {/* Hidden file input */}
           <input
@@ -134,11 +182,25 @@ export default function AttendancePage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
             Export Excel
+=======
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
           </button>
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Sync error banner */}
+=======
+      {/* Error banner */}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
       {error && (
         <div className="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-sm text-red-700">
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -152,6 +214,7 @@ export default function AttendancePage() {
         </div>
       )}
 
+<<<<<<< HEAD
       {/* Import error banner */}
       {importError && (
         <div className="mx-6 mt-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-sm text-amber-700">
@@ -163,11 +226,17 @@ export default function AttendancePage() {
         </div>
       )}
 
+=======
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
       {/* Stat cards */}
       <StatCards summary={summary} />
 
       {/* Table card */}
       <div className="mx-6 mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
+<<<<<<< HEAD
+=======
+        {/* Table header */}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
         <div className="bg-gray-900 px-5 py-3.5 flex items-center justify-between">
           <h2 className="text-white text-sm font-medium flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -175,6 +244,11 @@ export default function AttendancePage() {
             </svg>
             Attendance Records
           </h2>
+<<<<<<< HEAD
+=======
+
+          {/* Legend */}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
           <div className="flex items-center gap-4 text-xs text-gray-400">
             {[
               { color: "bg-green-500",  label: "Present"  },
@@ -207,6 +281,11 @@ export default function AttendancePage() {
           onMarkLeave={markLeave}
           onEdit={setEditTarget}
           onDelete={setDeleteTarget}
+<<<<<<< HEAD
+=======
+          onImportToBiometric={importToBiometric}
+          importingCode={biometricImportCode}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
         />
       </div>
 
@@ -230,4 +309,8 @@ export default function AttendancePage() {
       />
     </div>
   );
+<<<<<<< HEAD
 }                                                                                                                                     
+=======
+}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148

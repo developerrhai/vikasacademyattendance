@@ -104,7 +104,11 @@ self.__SERVER_FILES_MANIFEST={
         "transform": "lodash/{{member}}"
       }
     },
+<<<<<<< HEAD
     "outputFileTracingRoot": "C:\\Users\\DELL\\Desktop\\Attendence\\attendance-nextjs-module (1)\\attendance-module",
+=======
+    "outputFileTracingRoot": "C:\\Users\\DELL\\Desktop\\attendancemodule\\testattendence",
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -305,7 +309,11 @@ self.__SERVER_FILES_MANIFEST={
     "configFileName": "next.config.js",
     "swcMinify": false,
     "turbopack": {
+<<<<<<< HEAD
       "root": "C:\\Users\\DELL\\Desktop\\Attendence\\attendance-nextjs-module (1)\\attendance-module"
+=======
+      "root": "C:\\Users\\DELL\\Desktop\\attendancemodule\\testattendence"
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
     },
     "distDirRoot": ".next",
     "_originalRedirects": [
@@ -316,7 +324,11 @@ self.__SERVER_FILES_MANIFEST={
       }
     ]
   },
+<<<<<<< HEAD
   "appDir": "C:\\Users\\DELL\\Desktop\\Attendence\\attendance-nextjs-module (1)\\attendance-module",
+=======
+  "appDir": "C:\\Users\\DELL\\Desktop\\attendancemodule\\testattendence",
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
   "relativeAppDir": "",
   "files": [
     ".next\\routes-manifest.json",

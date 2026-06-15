@@ -1,6 +1,10 @@
 "use client";
 
+<<<<<<< HEAD
 import { useState, useCallback, useMemo } from "react";
+=======
+import { useState, useCallback, useMemo, useEffect } from "react";
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 import type {
   AttendanceRecord,
   AttendanceSummary,
@@ -16,6 +20,7 @@ const defaultFilter: FilterState = {
   date: today,
 };
 
+<<<<<<< HEAD
 // ── Static student records ──────────────────────────────────────────
 const staticRecords: AttendanceRecord[] = [
   {
@@ -81,6 +86,9 @@ const staticRecords: AttendanceRecord[] = [
 ];
 
 let nextId = 16;
+=======
+const API_BASE = "https://absolutefoundationattend.rhaitech.online/api";
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 
 function computeSummary(recs: AttendanceRecord[]): AttendanceSummary {
   return {
@@ -93,6 +101,10 @@ function computeSummary(recs: AttendanceRecord[]): AttendanceSummary {
 }
 
 export interface AddEmployeeData {
+<<<<<<< HEAD
+=======
+  code: string;
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
   name: string;
   gender: string;
   contact: string;
@@ -103,6 +115,19 @@ export interface AddEmployeeData {
   punchOut: string;
 }
 
+<<<<<<< HEAD
+=======
+export interface BiometricUploadOptions {
+  cardNumber?: string;
+  serialNumbers?: string; // comma-separated; defaults to configured device(s) on the backend
+  verifyMode?: string;    // e.g. "1" for face+card dual verification
+  isFaceUpload?: boolean;
+  isFPUpload?: boolean;
+  isCardUpload?: boolean;
+  isBioPasswordUpload?: boolean;
+}
+
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 export interface EditRecordData {
   name: string;
   contact: string;
@@ -112,6 +137,7 @@ export interface EditRecordData {
 }
 
 export function useAttendance() {
+<<<<<<< HEAD
   const [records, setRecords] = useState<AttendanceRecord[]>(staticRecords);
   const [filter, setFilter] = useState<FilterState>(defaultFilter);
   const [syncing] = useState(false);
@@ -185,6 +211,236 @@ export function useAttendance() {
   const deleteRecord = useCallback((studentCode: string) => {
     setRecords((prev) => prev.filter((r) => r.student.code !== studentCode));
   }, []);
+=======
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [filter, setFilter] = useState<FilterState>(defaultFilter);
+  const [syncing, setSyncing] = useState(false);
+  const [syncedAt, setSyncedAt] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [biometricImportCode, setBiometricImportCode] = useState<string | null>(null);
+
+  const PER_PAGE = 10;
+
+  // ── Fetch Attendance ──────────────────────────────────────────────
+  const fetchAttendance = useCallback(async (targetDate: string) => {
+    setSyncing(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/attendance?date=${targetDate}`);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to fetch attendance.");
+      }
+      const data = await res.json();
+      setRecords(data.records);
+      setSyncedAt(data.syncedAt);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to fetch attendance.");
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  // Fetch on date change
+  useEffect(() => {
+    fetchAttendance(filter.date);
+  }, [filter.date, fetchAttendance]);
+
+  // ── Sync Biometric Logs ───────────────────────────────────────────
+  const sync = useCallback(async (targetDate?: string) => {
+    const d = targetDate || filter.date;
+    setSyncing(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/attendance/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: d }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Sync failed.");
+      }
+      const data = await res.json();
+      setRecords(data.records);
+      setSyncedAt(data.syncedAt);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to sync biometric data.");
+    } finally {
+      setSyncing(false);
+    }
+  }, [filter.date]);
+
+  // ── Mark Leave ────────────────────────────────────────────────────
+  const markLeave = useCallback(async (studentCode: string) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/attendance/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentCode, date: filter.date }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to mark leave.");
+      }
+      // Update local state directly
+      setRecords((prev) =>
+        prev.map((r) =>
+          r.student.code === studentCode
+            ? { ...r, status: "On Leave" as const, punchIn: null, punchOut: null, manuallyEdited: true }
+            : r
+        )
+      );
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to mark leave.");
+    }
+  }, [filter.date]);
+
+  // ── Add Employee ──────────────────────────────────────────────────
+  const addEmployee = useCallback(async (data: AddEmployeeData) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/students`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: data.code,
+          name: data.name,
+          gender: data.gender,
+          contact: data.contact,
+          rollNo: data.rollNo,
+          standard: data.standard,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to add student.");
+      }
+
+      // If manual override details are specified, update the attendance record
+      if (data.punchIn || data.punchOut || data.status !== "Present") {
+        await fetch(`${API_BASE}/attendance/record`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentCode: data.code,
+            date: filter.date,
+            status: data.status,
+            punchIn: data.punchIn,
+            punchOut: data.punchOut,
+          }),
+        });
+      }
+
+      await fetchAttendance(filter.date);
+      setPage(0);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to add employee.");
+    }
+  }, [filter.date, fetchAttendance]);
+
+  // ── Edit Record ───────────────────────────────────────────────────
+  const editRecord = useCallback(async (studentCode: string, data: EditRecordData) => {
+    setError(null);
+    try {
+      // 1. Update Student Profile Details
+      const studentRes = await fetch(`${API_BASE}/students/${studentCode}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          contact: data.contact,
+        }),
+      });
+      if (!studentRes.ok) {
+        const errData = await studentRes.json();
+        throw new Error(errData.error || "Failed to update student profile.");
+      }
+
+      // 2. Update Attendance punch / status details
+      const attendanceRes = await fetch(`${API_BASE}/attendance/record`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentCode,
+          date: filter.date,
+          status: data.status,
+          punchIn: data.punchIn,
+          punchOut: data.punchOut,
+        }),
+      });
+      if (!attendanceRes.ok) {
+        const errData = await attendanceRes.json();
+        throw new Error(errData.error || "Failed to update attendance record.");
+      }
+
+      await fetchAttendance(filter.date);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to edit attendance record.");
+    }
+  }, [filter.date, fetchAttendance]);
+
+  // ── Delete Record ─────────────────────────────────────────────────
+  const deleteRecord = useCallback(async (studentCode: string) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/students/${studentCode}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to delete student.");
+      }
+      await fetchAttendance(filter.date);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to delete student.");
+    }
+  }, [filter.date, fetchAttendance]);
+
+  // ── Import / Register Student on Biometric Device ────────────────
+  const importToBiometric = useCallback(
+    async (studentCode: string, options?: BiometricUploadOptions) => {
+      setError(null);
+      setBiometricImportCode(studentCode);
+      try {
+        const res = await fetch(`${API_BASE}/biometric/upload-user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentCode,
+            cardNumber: options?.cardNumber,
+            serialNumbers: options?.serialNumbers,
+            verifyMode: options?.verifyMode,
+            isFaceUpload: options?.isFaceUpload,
+            isFPUpload: options?.isFPUpload,
+            isCardUpload: options?.isCardUpload,
+            isBioPasswordUpload: options?.isBioPasswordUpload,
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Failed to register student on the biometric device.");
+        }
+        return await res.json();
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Failed to register student on the biometric device.");
+        throw err;
+      } finally {
+        setBiometricImportCode(null);
+      }
+    },
+    []
+  );
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 
   const updateFilter = useCallback((patch: Partial<FilterState>) => {
     setFilter((prev) => ({ ...prev, ...patch }));
@@ -198,7 +454,11 @@ export function useAttendance() {
         !q ||
         r.student.name.toLowerCase().includes(q) ||
         r.student.contact.includes(q) ||
+<<<<<<< HEAD
         r.student.code.includes(q);
+=======
+        r.student.code.toLowerCase().includes(q);
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
 
       const matchStatus = !filter.status || r.status === filter.status;
 
@@ -229,5 +489,12 @@ export function useAttendance() {
     addEmployee,
     editRecord,
     deleteRecord,
+<<<<<<< HEAD
   };
 }
+=======
+    importToBiometric,
+    biometricImportCode,
+  };
+}
+>>>>>>> 95cfb05157c1abe523ec9466570f4e16732a0148
