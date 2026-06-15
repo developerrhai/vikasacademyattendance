@@ -34,26 +34,47 @@ export default function AttendancePage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AttendanceRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AttendanceRecord | null>(null);
-  const importRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
-
+  const [importError, setImportError] = useState<string | null>(null);
+  const importRef = useRef<HTMLInputElement>(null);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  setImporting(true);
-  try {
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
-    // Pass rows to your hook or API
-    await importAttendance(rows); // wire up in useAttendance
-  } finally {
-    setImporting(false);
-    e.target.value = ""; // reset so same file can be re-imported
-  }
-};
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportError(null);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
+
+      if (rows.length === 0) {
+        setImportError("The Excel file is empty or has no valid rows.");
+        return;
+      }
+
+      for (const row of rows) {
+        await addEmployee({
+          name: row["Name"] ?? row["Employee Name"] ?? "",
+          employeeId: row["Employee ID"] ?? row["ID"] ?? "",
+          department: row["Department"] ?? "",
+          date: row["Date"] ?? filter.date,
+          checkIn: row["Check In"] ?? "",
+          checkOut: row["Check Out"] ?? "",
+          status: (row["Status"] as AttendanceRecord["status"]) ?? "present",
+        });
+      }
+    } catch (err) {
+      setImportError("Failed to parse the Excel file. Please check the format.");
+      console.error(err);
+    } finally {
+      setImporting(false);
+      e.target.value("");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,6 +97,7 @@ export default function AttendancePage() {
             </svg>
             {syncing ? "Syncing..." : "Sync Biometric"}
           </button>
+
           <button
             onClick={() => setIsAddOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -85,7 +107,8 @@ export default function AttendancePage() {
             </svg>
             Add Employee
           </button>
-          {/* Hidden file input for Excel import */}
+
+          {/* Hidden file input */}
           <input
             ref={importRef}
             type="file"
@@ -94,6 +117,7 @@ export default function AttendancePage() {
             onChange={handleImport}
           />
 
+          {/* Import Excel button */}
           <button
             onClick={() => importRef.current?.click()}
             disabled={importing}
@@ -104,6 +128,7 @@ export default function AttendancePage() {
             </svg>
             {importing ? "Importing..." : "Import Excel"}
           </button>
+
           <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -113,7 +138,7 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      {/* Error banner */}
+      {/* Sync error banner */}
       {error && (
         <div className="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-sm text-red-700">
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -127,12 +152,22 @@ export default function AttendancePage() {
         </div>
       )}
 
+      {/* Import error banner */}
+      {importError && (
+        <div className="mx-6 mt-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3 text-sm text-amber-700">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 3C6.48 3 2 7.48 2 12s4.48 9 10 9 10-4.48 10-10S17.52 3 12 3z"/>
+          </svg>
+          <span><strong>Import error:</strong> {importError}</span>
+          <button onClick={() => setImportError(null)} className="ml-auto text-amber-500 hover:text-amber-700">✕</button>
+        </div>
+      )}
+
       {/* Stat cards */}
       <StatCards summary={summary} />
 
       {/* Table card */}
       <div className="mx-6 mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {/* Table header */}
         <div className="bg-gray-900 px-5 py-3.5 flex items-center justify-between">
           <h2 className="text-white text-sm font-medium flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -140,8 +175,6 @@ export default function AttendancePage() {
             </svg>
             Attendance Records
           </h2>
-
-          {/* Legend */}
           <div className="flex items-center gap-4 text-xs text-gray-400">
             {[
               { color: "bg-green-500",  label: "Present"  },
