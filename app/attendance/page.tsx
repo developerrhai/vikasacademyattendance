@@ -58,15 +58,17 @@ export default function AttendancePage() {
       }
 
       for (const row of rows) {
-        await addEmployee({
-          name:       row["Name"]          ?? row["Employee Name"] ?? "",
-          employeeId: row["Employee ID"]   ?? row["ID"]            ?? "",
-          department: row["Department"]    ?? "",
-          date:       row["Date"]          ?? filter.date,
-          checkIn:    row["Check In"]      ?? "",
-          checkOut:   row["Check Out"]     ?? "",
-          status: (row["Status"] as AttendanceRecord["status"]) ?? "Present",
-        });
+     await addEmployee({
+        code:     row["Employee ID"] ?? row["Code"] ?? row["ID"] ?? "",
+        name:     row["Name"]        ?? row["Employee Name"]     ?? "",
+        gender:   row["Gender"]      ?? "",
+        contact:  row["Contact"]     ?? row["Phone"]             ?? "",
+        rollNo:   row["Roll No"]     ?? row["Roll Number"]       ?? "",
+        standard: row["Standard"]    ?? row["Class"]             ?? "",
+        status:  (row["Status"] as AttendanceRecord["status"])   ?? "Present",
+        punchIn:  row["Check In"]    ?? row["Punch In"]          ?? "",
+        punchOut: row["Check Out"]   ?? row["Punch Out"]         ?? "",
+      });
       }
     } catch (err) {
       setImportError("Failed to parse the Excel file. Please check the format.");
