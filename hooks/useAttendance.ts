@@ -70,25 +70,60 @@ export function useAttendance() {
   const PER_PAGE = 10;
 
   // ── Fetch Attendance ──────────────────────────────────────────────
+  // const fetchAttendance = useCallback(async (targetDate: string) => {
+  //   setSyncing(true);
+  //   setError(null);
+  //   try {
+  //     const res = await fetch(`${API_BASE}/attendance?date=${targetDate}`);
+  //     if (!res.ok) {
+  //       const errData = await res.json();
+  //       throw new Error(errData.error || "Failed to fetch attendance.");
+  //     }
+  //     const data = await res.json();
+  //     setRecords(data.records);
+  //     setSyncedAt(data.syncedAt);
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     setError(err.message || "Failed to fetch attendance.");
+  //   } finally {
+  //     setSyncing(false);
+  //   }
+  // }, []);
+
   const fetchAttendance = useCallback(async (targetDate: string) => {
-    setSyncing(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/attendance?date=${targetDate}`);
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to fetch attendance.");
-      }
-      const data = await res.json();
-      setRecords(data.records);
-      setSyncedAt(data.syncedAt);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to fetch attendance.");
-    } finally {
-      setSyncing(false);
+  setSyncing(true);
+  setError(null);
+  try {
+    const res = await fetch(`${API_BASE}/attendance?date=${targetDate}`);
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to fetch attendance.");
     }
-  }, []);
+    const data = await res.json();
+
+    // ✅ ADD THIS — normalize whatever shape the API returns into r.student.*
+    const mapped = (data.records ?? []).map((r: any) => ({
+      ...r,
+      student: {
+        id:       r.student?.id       ?? r.studentId   ?? r.id       ?? "",
+        code:     r.student?.code     ?? r.studentCode ?? r.code     ?? "",
+        name:     r.student?.name     ?? r.studentName ?? r.name     ?? "",
+        gender:   r.student?.gender   ?? r.gender                    ?? "",
+        contact:  r.student?.contact  ?? r.contact                   ?? "",
+        rollNo:   r.student?.rollNo   ?? r.rollNo                    ?? "",
+        standard: r.student?.standard ?? r.standard                  ?? "",
+      },
+    }));
+
+    setRecords(mapped);
+    setSyncedAt(data.syncedAt);
+  } catch (err: any) {
+    console.error(err);
+    setError(err.message || "Failed to fetch attendance.");
+  } finally {
+    setSyncing(false);
+  }
+}, []);
 
   // Fetch on date change
   useEffect(() => {
