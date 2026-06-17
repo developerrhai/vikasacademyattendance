@@ -50,7 +50,7 @@ export function AttendanceTable({
           <thead>
             <tr className="bg-gray-900 text-gray-300">
               <th className="px-4 py-3 text-left font-medium text-xs w-10">#</th>
-              <th className="px-4 py-3 text-left font-medium text-xs">Student</th>
+              <th className="px-4 py-3 text-left font-medium text-xs">Employee Name</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Contact</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Punch In</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Punch Out</th>

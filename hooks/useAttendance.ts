@@ -113,7 +113,7 @@ export function useAttendance() {
         student: {
           id: r.student?.id ?? r.studentId ?? r.id ?? "",
           code: r.student?.code ?? r.studentCode ?? r.code ?? "",
-          name: r.student?.name ?? r.studentName ?? r.name ?? "",
+          name: r.student?.name ?? r.studentName ?? r.name ?? r.student?.EmployeeName ?? r.EmployeeName ?? r.employeeName ?? "Unknown",
           gender: r.student?.gender ?? r.gender ?? "",
           contact: r.student?.contact ?? r.contact ?? "",
           rollNo: r.student?.rollNo ?? r.rollNo ?? "",
