@@ -21,6 +21,7 @@ export interface Student {
 
 export interface AttendanceRecord {
   student: Student;
+  employeeName?: string;
   date: string;
   punchIn: string | null;
   punchOut: string | null;

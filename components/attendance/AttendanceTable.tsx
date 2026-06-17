@@ -82,7 +82,7 @@ export function AttendanceTable({
                           {getInitials(record.student.name)}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{record.student.name}</p>
+                          <p className="font-medium text-gray-900">{record.employeeName ?? record.student.name}</p>
                           <p className="text-xs text-gray-400">{record.student.gender} · #{record.student.code}</p>
                         </div>
                       </div>
