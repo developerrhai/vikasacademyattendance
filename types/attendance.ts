@@ -17,6 +17,9 @@ export interface Student {
   contact: string;
   rollNo?: string;
   standard?: string;
+  section?: string;
+  parentName?: string;
+  parentMobile?: string;
 }
 
 export interface AttendanceRecord {

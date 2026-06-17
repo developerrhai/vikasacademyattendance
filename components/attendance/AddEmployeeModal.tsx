@@ -20,6 +20,9 @@ export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
     contact: "",
     rollNo: "",
     standard: "",
+    section: "",
+    parentName: "",
+    parentMobile: "",
     status: "Present",
     punchIn: "",
     punchOut: "",
@@ -30,7 +33,7 @@ export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
-    setForm({ code: "", name: "", gender: "Male", contact: "", rollNo: "", standard: "", status: "Present", punchIn: "", punchOut: "" });
+    setForm({ code: "", name: "", gender: "Male", contact: "", rollNo: "", standard: "", section: "", parentName: "", parentMobile: "", status: "Present", punchIn: "", punchOut: "" });
     onClose();
   };
 
@@ -124,30 +127,63 @@ export function AddEmployeeModal({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
 
-          {/* Standard & Status */}
+          {/* Standard & Section */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Standard / Class</label>
               <input
                 value={form.standard}
                 onChange={(e) => update({ standard: e.target.value })}
-                placeholder="e.g. 10A"
+                placeholder="e.g. 10"
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Status *</label>
-              <select
-                required
-                value={form.status}
-                onChange={(e) => update({ status: e.target.value as AttendanceStatus })}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                {statusOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Section</label>
+              <input
+                value={form.section}
+                onChange={(e) => update({ section: e.target.value })}
+                placeholder="e.g. A"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
+          </div>
+
+          {/* Parent Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Parent Name</label>
+              <input
+                value={form.parentName}
+                onChange={(e) => update({ parentName: e.target.value })}
+                placeholder="Father/Mother name"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Parent Mobile</label>
+              <input
+                value={form.parentMobile}
+                onChange={(e) => update({ parentMobile: e.target.value })}
+                placeholder="Parent contact number"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Status Options */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Status *</label>
+            <select
+              required
+              value={form.status}
+              onChange={(e) => update({ status: e.target.value as AttendanceStatus })}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {statusOptions.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
 
           {/* Punch In & Out */}

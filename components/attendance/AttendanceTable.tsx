@@ -168,8 +168,18 @@ export function AttendanceTable({
                       <td colSpan={8} className="px-6 py-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                           <div>
-                            <p className="text-gray-400 mb-0.5">Standard</p>
-                            <p className="font-medium text-gray-700">{record.student.standard ?? "—"}</p>
+                            <p className="text-gray-400 mb-0.5">Standard / Section</p>
+                            <p className="font-medium text-gray-700">
+                              {record.student.standard ?? "—"} 
+                              {record.student.section ? ` · Sec ${record.student.section}` : ""}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 mb-0.5">Parent Info</p>
+                            <p className="font-medium text-gray-700">
+                              {record.student.parentName || "—"} 
+                              {record.student.parentMobile ? ` (${record.student.parentMobile})` : ""}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-400 mb-0.5">Total punches</p>

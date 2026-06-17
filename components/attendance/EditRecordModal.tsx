@@ -20,6 +20,11 @@ export function EditRecordModal({ open, record, onClose, onSubmit }: Props) {
     status: "Present",
     punchIn: "",
     punchOut: "",
+    standard: "",
+    section: "",
+    rollNo: "",
+    parentName: "",
+    parentMobile: "",
   });
 
   useEffect(() => {
@@ -30,6 +35,11 @@ export function EditRecordModal({ open, record, onClose, onSubmit }: Props) {
         status: record.status,
         punchIn: record.punchIn ?? "",
         punchOut: record.punchOut ?? "",
+        standard: record.student.standard ?? "",
+        section: record.student.section ?? "",
+        rollNo: record.student.rollNo ?? "",
+        parentName: record.student.parentName ?? "",
+        parentMobile: record.student.parentMobile ?? "",
       });
     }
   }, [record]);
@@ -89,6 +99,54 @@ export function EditRecordModal({ open, record, onClose, onSubmit }: Props) {
                 required
                 value={form.contact}
                 onChange={(e) => update({ contact: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Roll No, Standard, Section */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Roll No</label>
+              <input
+                value={form.rollNo}
+                onChange={(e) => update({ rollNo: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Standard / Class</label>
+              <input
+                value={form.standard}
+                onChange={(e) => update({ standard: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Section</label>
+              <input
+                value={form.section}
+                onChange={(e) => update({ section: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Parent Info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Parent Name</label>
+              <input
+                value={form.parentName}
+                onChange={(e) => update({ parentName: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Parent Mobile</label>
+              <input
+                value={form.parentMobile}
+                onChange={(e) => update({ parentMobile: e.target.value })}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

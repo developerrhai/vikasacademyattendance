@@ -35,6 +35,9 @@ export interface AddEmployeeData {
   contact: string;
   rollNo: string;
   standard: string;
+  section?: string;
+  parentName?: string;
+  parentMobile?: string;
   status: AttendanceStatus;
   punchIn: string;
   punchOut: string;
@@ -56,6 +59,11 @@ export interface EditRecordData {
   status: AttendanceStatus;
   punchIn: string;
   punchOut: string;
+  standard?: string;
+  section?: string;
+  rollNo?: string;
+  parentName?: string;
+  parentMobile?: string;
 }
 
 export function useAttendance() {
@@ -118,6 +126,9 @@ export function useAttendance() {
           contact: r.student?.contact ?? r.contact ?? "",
           rollNo: r.student?.rollNo ?? r.rollNo ?? "",
           standard: r.student?.standard ?? r.standard ?? "",
+          section: r.student?.section ?? r.section ?? "",
+          parentName: r.student?.parentName ?? r.parentName ?? "",
+          parentMobile: r.student?.parentMobile ?? r.parentMobile ?? "",
         },
       }));
 
@@ -212,6 +223,9 @@ export function useAttendance() {
           contact: data.contact,
           rollNo: data.rollNo,
           standard: data.standard,
+          section: data.section,
+          parentName: data.parentName,
+          parentMobile: data.parentMobile,
         }),
       });
       if (!res.ok) {
@@ -255,7 +269,15 @@ export function useAttendance() {
       const studentRes = await fetch(`${API_BASE}/students/${studentCode}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name, contact: data.contact }),
+        body: JSON.stringify({
+          name: data.name,
+          contact: data.contact,
+          standard: data.standard,
+          section: data.section,
+          rollNo: data.rollNo,
+          parentName: data.parentName,
+          parentMobile: data.parentMobile,
+        }),
       });
       if (!studentRes.ok) {
         let errData;
