@@ -382,16 +382,20 @@ export function useAttendance() {
     []
   );
 
-  // ── Notify WhatsApp ───────────────────────────────────────────────
+  // ── Notify WhatsApp (via Whatsassure API) ────────────────────────
+  // Calls the local Next.js route /api/whatsapp/notify which forwards
+  // to https://crmapi.whatsassure.com using the template:
+  //   "Respected Parent, {{1}} has {{2}} at Vikas Academy {{3}}. Thank you!"
   const notifyWhatsApp = useCallback(async (targetDate?: string) => {
     const d = targetDate || filter.date;
     setNotifyingWhatsApp(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/attendance/notify-whatsapp`, {
+      // Send ALL records (not just the current page) so every parent is notified
+      const res = await fetch(`/api/whatsapp/notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: d }),
+        body: JSON.stringify({ records, date: d }),
       });
       if (!res.ok) {
         let errData;
@@ -403,14 +407,15 @@ export function useAttendance() {
         throw new Error(errData.error || "Failed to notify WhatsApp.");
       }
       const data = await res.json();
-      alert(data.message); // Simple alert to notify success summary
+      alert(data.message);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to notify WhatsApp.");
     } finally {
       setNotifyingWhatsApp(false);
     }
-  }, [filter.date]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter.date, records]);
 
   // ── Filter & Pagination ───────────────────────────────────────────
   const updateFilter = useCallback((patch: Partial<FilterState>) => {
