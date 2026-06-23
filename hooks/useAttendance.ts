@@ -382,8 +382,8 @@ export function useAttendance() {
     []
   );
 
-  // ── Notify WhatsApp (via Whatsassure API) ────────────────────────
-  // Calls the local Next.js route /api/whatsapp/notify which forwards
+  // ── Notify WhatsApp (via Whatsassure API through backend) ────────────────────────
+  // Calls the backend express route /api/attendance/notify-whatsapp which forwards
   // to https://crmapi.whatsassure.com using the template:
   //   "Respected Parent, {{1}} has {{2}} at Vikas Academy {{3}}. Thank you!"
   const notifyWhatsApp = useCallback(async (targetDate?: string) => {
@@ -392,7 +392,7 @@ export function useAttendance() {
     setError(null);
     try {
       // Send ALL records (not just the current page) so every parent is notified
-      const res = await fetch(`/api/whatsapp/notify`, {
+      const res = await fetch(`${API_BASE}/attendance/notify-whatsapp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ records, date: d }),
