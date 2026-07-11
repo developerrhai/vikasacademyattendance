@@ -75,6 +75,7 @@ export function useAttendance() {
   const [page, setPage] = useState(0);
   const [biometricImportCode, setBiometricImportCode] = useState<string | null>(null);
   const [notifyingWhatsApp, setNotifyingWhatsApp] = useState(false);
+  const [notifyingSMS, setNotifyingSMS] = useState(false);
 
   const PER_PAGE = 10;
 
@@ -417,6 +418,37 @@ export function useAttendance() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter.date, records]);
 
+  // ── Notify SMS ────────────────────────────────────────────────────────────
+  const notifySMS = useCallback(async (targetDate?: string) => {
+    const d = targetDate || filter.date;
+    setNotifyingSMS(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/attendance/notify-sms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records, date: d }),
+      });
+      if (!res.ok) {
+        let errData;
+        try {
+          errData = await res.json();
+        } catch {
+          throw new Error(`Server returned a non-JSON error (status ${res.status}).`);
+        }
+        throw new Error(errData.error || "Failed to notify SMS.");
+      }
+      const data = await res.json();
+      alert(data.message);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to notify SMS.");
+    } finally {
+      setNotifyingSMS(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter.date, records]);
+
   // ── Filter & Pagination ───────────────────────────────────────────
   const updateFilter = useCallback((patch: Partial<FilterState>) => {
     setFilter((prev) => ({ ...prev, ...patch }));
@@ -465,5 +497,7 @@ export function useAttendance() {
     biometricImportCode,
     notifyWhatsApp,
     notifyingWhatsApp,
+    notifySMS,
+    notifyingSMS,
   };
 }

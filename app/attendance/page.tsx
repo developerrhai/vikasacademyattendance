@@ -29,8 +29,12 @@ export default function AttendancePage() {
     addEmployee,
     editRecord,
     deleteRecord,
+    importToBiometric,
+    biometricImportCode,
     notifyWhatsApp,
     notifyingWhatsApp,
+    notifySMS,
+    notifyingSMS,
   } = useAttendance();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -186,12 +190,24 @@ export default function AttendancePage() {
           <button
             onClick={() => notifyWhatsApp(filter.date)}
             disabled={records.length === 0 || notifyingWhatsApp}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 disabled:opacity-50"
           >
             <svg className={`w-4 h-4 ${notifyingWhatsApp ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
             </svg>
             {notifyingWhatsApp ? "Sending..." : "Notify WhatsApp"}
+          </button>
+          
+          {/* Notify SMS */}
+          <button
+            onClick={() => notifySMS(filter.date)}
+            disabled={records.length === 0 || notifyingSMS}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            <svg className={`w-4 h-4 ${notifyingSMS ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            {notifyingSMS ? "Sending SMS..." : "Notify SMS"}
           </button>
         </div>
       </div>
