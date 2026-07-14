@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { FilterState, AttendanceStatus } from "@/types/attendance";
+import type { FilterState, AttendanceStatus, Batch } from "@/types/attendance";
 
 interface Props {
   filter: FilterState;
@@ -9,6 +9,8 @@ interface Props {
   onSync: () => void;
   syncing: boolean;
   syncedAt: string | null;
+  standards: string[];
+  batches: Batch[];
 }
 
 const STATUS_OPTIONS: { value: AttendanceStatus | ""; label: string }[] = [
@@ -25,7 +27,7 @@ function formatSyncTime(iso: string) {
   });
 }
 
-export function FilterBar({ filter, onChange, onSync, syncing, syncedAt }: Props) {
+export function FilterBar({ filter, onChange, onSync, syncing, syncedAt, standards, batches }: Props) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -50,6 +52,30 @@ export function FilterBar({ filter, onChange, onSync, syncing, syncedAt }: Props
         onChange={(e) => onChange({ date: e.target.value })}
         className="py-2 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
+      <select
+        value={filter.standard || ""}
+        onChange={(e) => onChange({ standard: e.target.value })}
+        className="py-2 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Classes</option>
+        {standards.map((std) => (
+          <option key={std} value={std}>{std}</option>
+        ))}
+      </select>
+
+      <select
+        value={filter.batchId || ""}
+        onChange={(e) => onChange({ batchId: e.target.value })}
+        className="py-2 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Batches</option>
+        {batches.map((b) => (
+          <option key={b.id ?? "null"} value={b.id ?? "null"}>
+            {b.name} ({b.startTime.slice(0, 5)} - {b.endTime.slice(0, 5)})
+          </option>
+        ))}
+      </select>
 
       <select
         value={filter.status}

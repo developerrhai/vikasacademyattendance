@@ -156,6 +156,12 @@ export function buildAttendanceRecords(
 
     return {
       student,
+      batch: {
+        id: null,
+        name: "General Batch",
+        startTime: "09:00:00",
+        endTime: "17:30:00"
+      },
       date,
       punchIn,
       punchOut,

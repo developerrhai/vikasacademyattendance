@@ -6,6 +6,7 @@ import type {
   AttendanceSummary,
   AttendanceStatus,
   FilterState,
+  Batch,
 } from "@/types/attendance";
 
 const today = new Date().toISOString().split("T")[0];
@@ -14,9 +15,11 @@ const defaultFilter: FilterState = {
   search: "",
   status: "",
   date: today,
+  standard: "",
+  batchId: "",
 };
 
-const API_BASE = "https://vikasacademyatt.rhaitech.online/api"; // Temporarily pointing to local backend to bypass the EC2 crash
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://vikasacademyatt.rhaitech.online/api";
 
 function computeSummary(recs: AttendanceRecord[]): AttendanceSummary {
   return {
@@ -41,12 +44,13 @@ export interface AddEmployeeData {
   status: AttendanceStatus;
   punchIn: string;
   punchOut: string;
+  batchIds?: number[];
 }
 
 export interface BiometricUploadOptions {
   cardNumber?: string;
-  serialNumbers?: string; // comma-separated; defaults to configured device(s) on the backend
-  verifyMode?: string;    // e.g. "1" for face+card dual verification
+  serialNumbers?: string;
+  verifyMode?: string;
   isFaceUpload?: boolean;
   isFPUpload?: boolean;
   isCardUpload?: boolean;
@@ -64,10 +68,13 @@ export interface EditRecordData {
   rollNo?: string;
   parentName?: string;
   parentMobile?: string;
+  batchIds?: number[];
+  batchId?: number | null;
 }
 
 export function useAttendance() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [filter, setFilter] = useState<FilterState>(defaultFilter);
   const [syncing, setSyncing] = useState(false);
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
@@ -79,27 +86,32 @@ export function useAttendance() {
 
   const PER_PAGE = 10;
 
-  // ── Fetch Attendance ──────────────────────────────────────────────
-  // const fetchAttendance = useCallback(async (targetDate: string) => {
-  //   setSyncing(true);
-  //   setError(null);
-  //   try {
-  //     const res = await fetch(`${API_BASE}/attendance?date=${targetDate}`);
-  //     if (!res.ok) {
-  //       const errData = await res.json();
-  //       throw new Error(errData.error || "Failed to fetch attendance.");
-  //     }
-  //     const data = await res.json();
-  //     setRecords(data.records);
-  //     setSyncedAt(data.syncedAt);
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     setError(err.message || "Failed to fetch attendance.");
-  //   } finally {
-  //     setSyncing(false);
-  //   }
-  // }, []);
+  // ── Fetch Batches ─────────────────────────────────────────────────
+  const fetchBatches = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/batches`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = (data.batches ?? []).map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          startTime: b.start_time ?? b.startTime ?? "",
+          endTime: b.end_time ?? b.endTime ?? "",
+          lateGraceMinutes: b.late_grace_minutes ?? b.lateGraceMinutes ?? 10,
+        }));
+        setBatches(mapped);
+      }
+    } catch (err) {
+      console.error("Failed to fetch batches:", err);
+    }
+  }, []);
 
+  // Fetch batches on initial mount
+  useEffect(() => {
+    fetchBatches();
+  }, [fetchBatches]);
+
+  // ── Fetch Attendance ──────────────────────────────────────────────
   const fetchAttendance = useCallback(async (targetDate: string) => {
     setSyncing(true);
     setError(null);
@@ -116,7 +128,6 @@ export function useAttendance() {
       }
       const data = await res.json();
 
-      // ✅ ADD THIS — normalize whatever shape the API returns into r.student.*
       const mapped = (data.records ?? []).map((r: any) => ({
         ...r,
         student: {
@@ -130,7 +141,21 @@ export function useAttendance() {
           section: r.student?.section ?? r.section ?? "",
           parentName: r.student?.parentName ?? r.parentName ?? "",
           parentMobile: r.student?.parentMobile ?? r.parentMobile ?? "",
+          batches: (r.student?.batches ?? []).map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            startTime: b.start_time ?? b.startTime ?? "",
+            endTime: b.end_time ?? b.endTime ?? "",
+            lateGraceMinutes: b.late_grace_minutes ?? b.lateGraceMinutes ?? 10,
+          })),
         },
+        batch: r.batch ? {
+          id: r.batch.id,
+          name: r.batch.name,
+          startTime: r.batch.start_time ?? r.batch.startTime ?? "",
+          endTime: r.batch.end_time ?? r.batch.endTime ?? "",
+          lateGraceMinutes: r.batch.late_grace_minutes ?? r.batch.lateGraceMinutes ?? 10,
+        } : { id: null, name: "General Batch", startTime: "09:00:00", endTime: "17:30:00" }
       }));
 
       setRecords(mapped);
@@ -169,7 +194,38 @@ export function useAttendance() {
         throw new Error(errData.error || "Sync failed.");
       }
       const data = await res.json();
-      setRecords(data.records);
+
+      const mapped = (data.records ?? []).map((r: any) => ({
+        ...r,
+        student: {
+          id: r.student?.id ?? r.studentId ?? r.id ?? "",
+          code: r.student?.code ?? r.studentCode ?? r.code ?? "",
+          name: r.student?.name ?? r.studentName ?? r.name ?? r.student?.EmployeeName ?? r.EmployeeName ?? r.employeeName ?? "Unknown",
+          gender: r.student?.gender ?? r.gender ?? "",
+          contact: r.student?.contact ?? r.contact ?? "",
+          rollNo: r.student?.rollNo ?? r.rollNo ?? "",
+          standard: r.student?.standard ?? r.standard ?? "",
+          section: r.student?.section ?? r.section ?? "",
+          parentName: r.student?.parentName ?? r.parentName ?? "",
+          parentMobile: r.student?.parentMobile ?? r.parentMobile ?? "",
+          batches: (r.student?.batches ?? []).map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            startTime: b.start_time ?? b.startTime ?? "",
+            endTime: b.end_time ?? b.endTime ?? "",
+            lateGraceMinutes: b.late_grace_minutes ?? b.lateGraceMinutes ?? 10,
+          })),
+        },
+        batch: r.batch ? {
+          id: r.batch.id,
+          name: r.batch.name,
+          startTime: r.batch.start_time ?? r.batch.startTime ?? "",
+          endTime: r.batch.end_time ?? r.batch.endTime ?? "",
+          lateGraceMinutes: r.batch.late_grace_minutes ?? r.batch.lateGraceMinutes ?? 10,
+        } : { id: null, name: "General Batch", startTime: "09:00:00", endTime: "17:30:00" }
+      }));
+
+      setRecords(mapped);
       setSyncedAt(data.syncedAt);
     } catch (err: any) {
       console.error(err);
@@ -180,13 +236,13 @@ export function useAttendance() {
   }, [filter.date]);
 
   // ── Mark Leave ────────────────────────────────────────────────────
-  const markLeave = useCallback(async (studentCode: string) => {
+  const markLeave = useCallback(async (studentCode: string, batchId?: number | null) => {
     setError(null);
     try {
       const res = await fetch(`${API_BASE}/attendance/leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentCode, date: filter.date }),
+        body: JSON.stringify({ studentCode, date: filter.date, batchId }),
       });
       if (!res.ok) {
         let errData;
@@ -199,7 +255,7 @@ export function useAttendance() {
       }
       setRecords((prev) =>
         prev.map((r) =>
-          r.student.code === studentCode
+          r.student.code === studentCode && (batchId === undefined || r.batch.id === batchId)
             ? { ...r, status: "On Leave" as const, punchIn: null, punchOut: null, manuallyEdited: true }
             : r
         )
@@ -227,6 +283,7 @@ export function useAttendance() {
           section: data.section,
           parentName: data.parentName,
           parentMobile: data.parentMobile,
+          batchIds: data.batchIds || [],
         }),
       });
       if (!res.ok) {
@@ -234,24 +291,28 @@ export function useAttendance() {
         try {
           errData = await res.json();
         } catch {
-          throw new Error(`Server returned a non-JSON error (status ${res.status}). The deployed API might be crashing.`);
+          throw new Error(`Server returned a non-JSON error (status ${res.status}).`);
         }
         throw new Error(errData.error || "Failed to add student.");
       }
 
-      // If manual override details are specified, update the attendance record
       if (data.punchIn || data.punchOut || data.status !== "Present") {
-        await fetch(`${API_BASE}/attendance/record`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            studentCode: data.code,
-            date: filter.date,
-            status: data.status,
-            punchIn: data.punchIn,
-            punchOut: data.punchOut,
-          }),
-        });
+        // If multiple batchIds are set, override all of them
+        const finalBatchIds = (data.batchIds && data.batchIds.length > 0) ? data.batchIds : [null];
+        for (const bid of finalBatchIds) {
+          await fetch(`${API_BASE}/attendance/record`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              studentCode: data.code,
+              date: filter.date,
+              status: data.status,
+              punchIn: data.punchIn,
+              punchOut: data.punchOut,
+              batchId: bid,
+            }),
+          });
+        }
       }
 
       await fetchAttendance(filter.date);
@@ -266,7 +327,7 @@ export function useAttendance() {
   const editRecord = useCallback(async (studentCode: string, data: EditRecordData) => {
     setError(null);
     try {
-      // 1. Update Student Profile Details
+      // 1. Update Student Profile & Batch Assignments
       const studentRes = await fetch(`${API_BASE}/students/${studentCode}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -278,8 +339,10 @@ export function useAttendance() {
           rollNo: data.rollNo,
           parentName: data.parentName,
           parentMobile: data.parentMobile,
+          batchIds: data.batchIds,
         }),
       });
+
       if (!studentRes.ok) {
         let errData;
         try {
@@ -290,7 +353,7 @@ export function useAttendance() {
         throw new Error(errData.error || "Failed to update student profile.");
       }
 
-      // 2. Update Attendance punch / status details
+      // 2. Update Attendance punch / status details for this specific batch
       const attendanceRes = await fetch(`${API_BASE}/attendance/record`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -300,6 +363,7 @@ export function useAttendance() {
           status: data.status,
           punchIn: data.punchIn,
           punchOut: data.punchOut,
+          batchId: data.batchId,
         }),
       });
       if (!attendanceRes.ok) {
@@ -341,6 +405,66 @@ export function useAttendance() {
       setError(err.message || "Failed to delete student.");
     }
   }, [filter.date, fetchAttendance]);
+
+  // ── Manage Batches ────────────────────────────────────────────────
+  const addBatch = useCallback(async (bData: Omit<Batch, "id">) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/batches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: bData.name,
+          start_time: bData.startTime,
+          end_time: bData.endTime,
+          late_grace_minutes: bData.lateGraceMinutes,
+        }),
+      });
+      if (!res.ok) {
+        let errData;
+        try {
+          errData = await res.json();
+        } catch {}
+        throw new Error(errData?.error || "Failed to add batch");
+      }
+      await fetchBatches();
+    } catch (err: any) {
+      setError(err.message || "Failed to add batch");
+    }
+  }, [fetchBatches]);
+
+  const updateBatch = useCallback(async (id: number, bData: Partial<Batch>) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/batches/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: bData.name,
+          start_time: bData.startTime,
+          end_time: bData.endTime,
+          late_grace_minutes: bData.lateGraceMinutes,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update batch");
+      await fetchBatches();
+    } catch (err: any) {
+      setError(err.message || "Failed to update batch");
+    }
+  }, [fetchBatches]);
+
+  const deleteBatch = useCallback(async (id: number) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/batches/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete batch");
+      await fetchBatches();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete batch");
+    }
+  }, [fetchBatches]);
 
   // ── Import / Register Student on Biometric Device ────────────────
   const importToBiometric = useCallback(
@@ -384,15 +508,11 @@ export function useAttendance() {
   );
 
   // ── Notify WhatsApp (via Whatsassure API through backend) ────────────────────────
-  // Calls the backend express route /api/attendance/notify-whatsapp which forwards
-  // to https://crmapi.whatsassure.com using the template:
-  //   "Respected Parent, {{1}} has {{2}} at Vikas Academy {{3}}. Thank you!"
   const notifyWhatsApp = useCallback(async (targetDate?: string) => {
     const d = targetDate || filter.date;
     setNotifyingWhatsApp(true);
     setError(null);
     try {
-      // Send ALL records (not just the current page) so every parent is notified
       const res = await fetch(`${API_BASE}/attendance/notify-whatsapp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -466,11 +586,25 @@ export function useAttendance() {
 
       const matchStatus = !filter.status || r.status === filter.status;
 
-      return matchSearch && matchStatus;
+      const matchStandard = !filter.standard || r.student.standard === filter.standard;
+
+      const matchBatch =
+        !filter.batchId ||
+        (filter.batchId === "null" && r.batch.id === null) ||
+        String(r.batch.id) === filter.batchId;
+
+      return matchSearch && matchStatus && matchStandard && matchBatch;
     });
-  }, [records, filter.search, filter.status]);
+  }, [records, filter.search, filter.status, filter.standard, filter.batchId]);
 
   const filteredSummary = useMemo(() => computeSummary(filtered), [filtered]);
+
+  const uniqueStandards = useMemo(() => {
+    const standards = records
+      .map((r) => r.student.standard)
+      .filter((s): s is string => !!s && s.trim() !== "");
+    return Array.from(new Set(standards)).sort();
+  }, [records]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paged = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
@@ -481,6 +615,8 @@ export function useAttendance() {
     summary: filteredSummary,
     filter,
     updateFilter,
+    standards: uniqueStandards,
+    batches,
     syncing,
     syncedAt,
     error,
@@ -499,5 +635,8 @@ export function useAttendance() {
     notifyingWhatsApp,
     notifySMS,
     notifyingSMS,
+    addBatch,
+    updateBatch,
+    deleteBatch,
   };
 }

@@ -10,7 +10,7 @@ interface Props {
   totalPages: number;
   totalFiltered: number;
   onPageChange: (page: number) => void;
-  onMarkLeave: (studentCode: string) => void;
+  onMarkLeave: (studentCode: string, batchId: number | null) => void;
   onEdit: (record: AttendanceRecord) => void;
   onDelete: (record: AttendanceRecord) => void;
 }
@@ -51,6 +51,7 @@ export function AttendanceTable({
             <tr className="bg-gray-900 text-gray-300">
               <th className="px-4 py-3 text-left font-medium text-xs w-10">#</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Employee Name</th>
+              <th className="px-4 py-3 text-left font-medium text-xs">Batch</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Contact</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Punch In</th>
               <th className="px-4 py-3 text-left font-medium text-xs">Punch Out</th>
@@ -61,13 +62,14 @@ export function AttendanceTable({
           </thead>
           <tbody className="divide-y divide-gray-50">
             {records.map((record, i) => {
-              const isExpanded = expandedRow === record.student.code;
+              const rowId = `${record.student.code}-${record.batch.id ?? "null"}`;
+              const isExpanded = expandedRow === rowId;
               return (
-                <Fragment key={record.student.code}>
+                <Fragment key={rowId}>
                   <tr
                     className="hover:bg-blue-50/40 transition-colors cursor-pointer"
                     onClick={() =>
-                      setExpandedRow(isExpanded ? null : record.student.code)
+                      setExpandedRow(isExpanded ? null : rowId)
                     }
                   >
                     {/* # */}
@@ -83,9 +85,20 @@ export function AttendanceTable({
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{record.employeeName ?? record.student.name}</p>
-                          <p className="text-xs text-gray-400">{record.student.gender} · #{record.student.code}</p>
+                          <p className="text-xs text-gray-400">
+                            {record.student.standard ? `Class ${record.student.standard} · ` : ""}
+                            {record.student.gender} · #{record.student.code}
+                          </p>
                         </div>
                       </div>
+                    </td>
+
+                    {/* Batch */}
+                    <td className="px-4 py-3 text-gray-700 font-medium">
+                      {record.batch.name}
+                      <p className="text-xs text-gray-400 font-mono mt-0.5">
+                        {record.batch.startTime.slice(0, 5)} - {record.batch.endTime.slice(0, 5)}
+                      </p>
                     </td>
 
                     {/* Contact */}
@@ -118,7 +131,7 @@ export function AttendanceTable({
                       <div className="flex items-center gap-1.5">
                         {/* View */}
                         <button
-                          onClick={() => setExpandedRow(isExpanded ? null : record.student.code)}
+                          onClick={() => setExpandedRow(isExpanded ? null : rowId)}
                           className="px-2.5 py-1 text-xs rounded-md border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
                           title="View details"
                         >
@@ -152,7 +165,7 @@ export function AttendanceTable({
                         {/* Leave (only for Absent) */}
                         {record.status === "Absent" && (
                           <button
-                            onClick={() => onMarkLeave(record.student.code)}
+                            onClick={() => onMarkLeave(record.student.code, record.batch.id)}
                             className="px-2.5 py-1 text-xs rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
                           >
                             Leave
@@ -164,8 +177,8 @@ export function AttendanceTable({
 
                   {/* Expanded detail row */}
                   {isExpanded && (
-                    <tr key={`${record.student.code}-detail`} className="bg-blue-50/60">
-                      <td colSpan={8} className="px-6 py-4">
+                    <tr key={`${rowId}-detail`} className="bg-blue-50/60">
+                      <td colSpan={9} className="px-6 py-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                           <div>
                             <p className="text-gray-400 mb-0.5">Standard / Section</p>

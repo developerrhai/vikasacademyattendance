@@ -35,6 +35,8 @@ export default function AttendancePage() {
     notifyingWhatsApp,
     notifySMS,
     notifyingSMS,
+    standards,
+    batches,
   } = useAttendance();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -270,6 +272,8 @@ export default function AttendancePage() {
           onSync={() => sync(filter.date)}
           syncing={syncing}
           syncedAt={syncedAt}
+          standards={standards}
+          batches={batches}
         />
 
         <AttendanceTable
@@ -289,12 +293,14 @@ export default function AttendancePage() {
         open={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSubmit={addEmployee}
+        batches={batches}
       />
       <EditRecordModal
         open={!!editTarget}
         record={editTarget}
         onClose={() => setEditTarget(null)}
         onSubmit={editRecord}
+        batches={batches}
       />
       <DeleteConfirmModal
         open={!!deleteTarget}

@@ -9,6 +9,14 @@ export interface BiometricLog {
   TemperatureState: string;
 }
 
+export interface Batch {
+  id: number | null;
+  name: string;
+  startTime: string;
+  endTime: string;
+  lateGraceMinutes?: number;
+}
+
 export interface Student {
   id: string;
   code: string;
@@ -20,11 +28,13 @@ export interface Student {
   section?: string;
   parentName?: string;
   parentMobile?: string;
+  batches?: Batch[];
 }
 
 export interface AttendanceRecord {
   student: Student;
   employeeName?: string;
+  batch: Batch;
   date: string;
   punchIn: string | null;
   punchOut: string | null;
@@ -60,4 +70,6 @@ export interface FilterState {
   search: string;
   status: AttendanceStatus | "";
   date: string;
+  standard?: string;
+  batchId?: string;
 }
