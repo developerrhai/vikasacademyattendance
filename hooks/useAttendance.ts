@@ -7,6 +7,7 @@ import type {
   AttendanceStatus,
   FilterState,
   Batch,
+  Holiday,
 } from "@/types/attendance";
 
 const today = new Date().toISOString().split("T")[0];
@@ -83,6 +84,7 @@ export function useAttendance() {
   const [biometricImportCode, setBiometricImportCode] = useState<string | null>(null);
   const [notifyingWhatsApp, setNotifyingWhatsApp] = useState(false);
   const [notifyingSMS, setNotifyingSMS] = useState(false);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
 
   const PER_PAGE = 10;
 
@@ -98,6 +100,7 @@ export function useAttendance() {
           startTime: b.start_time ?? b.startTime ?? "",
           endTime: b.end_time ?? b.endTime ?? "",
           lateGraceMinutes: b.late_grace_minutes ?? b.lateGraceMinutes ?? 10,
+          scheduledDays: b.scheduled_days ? b.scheduled_days.split(",") : ["Mon", "Tue", "Wed", "Thu", "Fri"],
         }));
         setBatches(mapped);
       }
@@ -418,6 +421,7 @@ export function useAttendance() {
           start_time: bData.startTime,
           end_time: bData.endTime,
           late_grace_minutes: bData.lateGraceMinutes,
+          scheduled_days: bData.scheduledDays?.join(","),
         }),
       });
       if (!res.ok) {
@@ -444,6 +448,7 @@ export function useAttendance() {
           start_time: bData.startTime,
           end_time: bData.endTime,
           late_grace_minutes: bData.lateGraceMinutes,
+          scheduled_days: bData.scheduledDays?.join(","),
         }),
       });
       if (!res.ok) throw new Error("Failed to update batch");
@@ -465,6 +470,59 @@ export function useAttendance() {
       setError(err.message || "Failed to delete batch");
     }
   }, [fetchBatches]);
+
+  // ── Holiday Management ────────────────────────────────────────────
+  const fetchHolidays = useCallback(async (month?: string) => {
+    try {
+      let url = `${API_BASE}/holidays`;
+      if (month) url += `?month=${month}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setHolidays(data.holidays ?? []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch holidays:", err);
+    }
+  }, []);
+
+  const addHoliday = useCallback(async (date: string, reason: string, isClosed: boolean = true) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/holidays`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, reason, is_closed: isClosed ? 1 : 0 }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save holiday");
+      }
+      const month = date.slice(0, 7);
+      await fetchHolidays(month);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  }, [fetchHolidays]);
+
+  const deleteHoliday = useCallback(async (id: number, dateStr: string) => {
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/holidays/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete holiday");
+      }
+      const month = dateStr.slice(0, 7);
+      await fetchHolidays(month);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  }, [fetchHolidays]);
 
   // ── Import / Register Student on Biometric Device ────────────────
   const importToBiometric = useCallback(
@@ -638,5 +696,9 @@ export function useAttendance() {
     addBatch,
     updateBatch,
     deleteBatch,
+    holidays,
+    fetchHolidays,
+    addHoliday,
+    deleteHoliday,
   };
 }

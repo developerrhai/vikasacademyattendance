@@ -15,6 +15,7 @@ export default function BatchesPage() {
   const [startTime, setStartTime] = useState("16:00:00");
   const [endTime, setEndTime] = useState("17:30:00");
   const [lateGrace, setLateGrace] = useState(10);
+  const [scheduledDays, setScheduledDays] = useState<string[]>(["Mon", "Tue", "Wed", "Thu", "Fri"]);
 
   const openAdd = () => {
     setEditingBatch(null);
@@ -22,6 +23,7 @@ export default function BatchesPage() {
     setStartTime("16:00:00");
     setEndTime("17:30:00");
     setLateGrace(10);
+    setScheduledDays(["Mon", "Tue", "Wed", "Thu", "Fri"]);
     setIsFormOpen(true);
   };
 
@@ -31,17 +33,23 @@ export default function BatchesPage() {
     setStartTime(b.startTime);
     setEndTime(b.endTime);
     setLateGrace(b.lateGraceMinutes ?? 10);
+    setScheduledDays(b.scheduledDays ?? ["Mon", "Tue", "Wed", "Thu", "Fri"]);
     setIsFormOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (scheduledDays.length === 0) {
+      alert("Please select at least one scheduled day.");
+      return;
+    }
     if (editingBatch && editingBatch.id !== null) {
       await updateBatch(editingBatch.id, {
         name,
         startTime,
         endTime,
         lateGraceMinutes: lateGrace,
+        scheduledDays,
       });
     } else {
       await addBatch({
@@ -49,6 +57,7 @@ export default function BatchesPage() {
         startTime,
         endTime,
         lateGraceMinutes: lateGrace,
+        scheduledDays,
       });
     }
     setIsFormOpen(false);
@@ -143,9 +152,27 @@ export default function BatchesPage() {
                       <span className="text-gray-400">End Time</span>
                       <span className="font-mono font-medium text-gray-800">{b.endTime.slice(0, 5)}</span>
                     </div>
-                    <div className="flex justify-between pb-1">
+                    <div className="flex justify-between border-b border-gray-50 pb-1.5">
                       <span className="text-gray-400">Late Grace</span>
                       <span className="font-medium text-gray-800">{b.lateGraceMinutes ?? 10} min</span>
+                    </div>
+                    <div className="flex flex-col gap-1 pb-1">
+                      <span className="text-gray-400 text-xs">Scheduled Days</span>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                          const isActive = b.scheduledDays?.includes(day);
+                          return (
+                            <span
+                              key={day}
+                              className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                                isActive ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"
+                              }`}
+                            >
+                              {day}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -235,6 +262,40 @@ export default function BatchesPage() {
                 />
                 <span className="text-[10px] text-gray-400 mt-1 block">
                   Students punching in after (Start Time + Grace Period) will be marked Late.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                  Scheduled Days *
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                    const isSelected = scheduledDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setScheduledDays(scheduledDays.filter((d) => d !== day));
+                          } else {
+                            setScheduledDays([...scheduledDays, day]);
+                          }
+                        }}
+                        className={`flex-1 min-w-[45px] py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                          isSelected
+                            ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-105"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-[10px] text-gray-400 mt-1.5 block">
+                  Select the days of the week this batch runs.
                 </span>
               </div>
 

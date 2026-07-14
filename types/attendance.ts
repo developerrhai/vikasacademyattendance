@@ -15,6 +15,7 @@ export interface Batch {
   startTime: string;
   endTime: string;
   lateGraceMinutes?: number;
+  scheduledDays?: string[];
 }
 
 export interface Student {
@@ -72,4 +73,11 @@ export interface FilterState {
   date: string;
   standard?: string;
   batchId?: string;
+}
+
+export interface Holiday {
+  id?: number;
+  date: string;
+  reason: string;
+  is_closed: number;
 }
