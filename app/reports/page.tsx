@@ -8,6 +8,8 @@ interface Batch {
   name: string;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://vikasacademyatt.rhaitech.online/api";
+
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<"attendance" | "enrollment" | "fee">("attendance");
   const [startDate, setStartDate] = useState("");
@@ -22,7 +24,7 @@ export default function ReportsPage() {
     async function fetchBatches() {
       try {
         // Adjust the API URL based on your .env setup. Defaulting to local dev path.
-        const res = await fetch("http://localhost:5013/api/batches");
+        const res = await fetch(`${API_BASE}/batches`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) setBatches(data.data || []);
@@ -46,7 +48,7 @@ export default function ReportsPage() {
       if (startDate) queryParams.append("startDate", startDate);
       if (endDate) queryParams.append("endDate", endDate);
 
-      const url = `http://localhost:5013/api/reports/download?${queryParams.toString()}`;
+      const url = `${API_BASE}/reports/download?${queryParams.toString()}`;
       
       // We can use an invisible anchor link to trigger download directly from the browser
       // This is better for streaming large files directly to disk
